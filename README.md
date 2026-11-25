@@ -1,14 +1,15 @@
 # Sanaei 3X-UI — VibeNest
 
-This repository builds the official [Sanaei 3X-UI](https://github.com/MHSanaei/3x-ui) source as a Docker image with deployment defaults for VibeNest.
+This repository builds the official [Sanaei 3X-UI](https://github.com/MHSanaei/3x-ui) source as a Docker image with deployment defaults for VibeNest. Upstream 3X-UI is licensed under [GPL-3.0](https://github.com/MHSanaei/3x-ui/blob/main/LICENSE).
 
 ## Upstream source and build versions
 
-- Upstream source is pinned to commit [`efb6c6d5796c427cb547fecc4f2a607c36ae7009`](https://github.com/MHSanaei/3x-ui/commit/efb6c6d5796c427cb547fecc4f2a607c36ae7009) so builds are reproducible and do not silently follow a moving branch.
+- Upstream source is pinned to commit [`efb6c6d5796c427cb547fecc4f2a607c36ae7009`](https://github.com/MHSanaei/3x-ui/commit/efb6c6d5796c427cb547fecc4f2a607c36ae7009) so the source checkout does not silently follow a moving branch.
 - Frontend: Node 26 / npm 11 or newer, enforced with `npm ci --engine-strict`.
 - Backend: Go 1.27 toolchain.
 - Runtime: Alpine 3.22.
 - CI builds `linux/amd64` and `linux/arm64`. Other architectures are not currently covered by this repository's CI.
+- The source revision is pinned, but the upstream `DockerInit.sh` still resolves some auxiliary assets (for example the latest `mtg-multi` release and routing-rule data) at build time. The complete image is therefore not guaranteed to be bit-for-bit reproducible.
 
 To upgrade 3X-UI, review the upstream changes first, then change the `UPSTREAM_REF` default near the top of the Dockerfile to the full 40-character commit SHA and push the change. Do not use a floating `main` reference for a production build.
 
@@ -27,6 +28,7 @@ The Docker health check verifies that the configured TCP listener is accepting c
 
 - **Required persistent path:** `/etc/x-ui`. The default SQLite database is `/etc/x-ui/x-ui.db`; panel settings are stored in the database too. Without persistent storage, a container replacement can lose the database and panel configuration.
 - **VibeNest managed PostgreSQL:** when `DATABASE_URL` is present and `XUI_DB_DSN` is not set, the entrypoint maps it to `XUI_DB_DSN` and selects PostgreSQL unless `XUI_DB_TYPE` was explicitly set. You can also configure `XUI_DB_TYPE=postgres` and `XUI_DB_DSN` directly. Keep the database URL in VibeNest's encrypted environment settings.
+- **Switching an existing deployment:** attaching PostgreSQL does not migrate an existing SQLite database automatically. Back up first and follow the [upstream SQLite-to-PostgreSQL migration guide](https://docs.sanaei.dev/docs/reference/database/) before switching a deployment that already contains clients or settings.
 - **Certificate persistence (optional):** if you use 3X-UI's own ACME/certificate management instead of VibeNest TLS, persist `/root/cert` and `/root/.acme.sh` as well. The upstream entrypoint re-registers the ACME renewal job from the latter path.
 
 SQLite remains the default when no PostgreSQL DSN is supplied. Back up the persistent volume or database regularly.

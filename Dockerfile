@@ -14,8 +14,9 @@ RUN apk add --no-cache ca-certificates git \
 
 # The current upstream frontend declares Node >=26 and npm >=11.
 FROM --platform=$BUILDPLATFORM node:26-alpine AS frontend
-WORKDIR /src/frontend
+WORKDIR /src
 COPY --from=source /src/ ./
+WORKDIR /src/frontend
 RUN node --version && npm --version && npm ci --engine-strict
 COPY --from=source /src/internal/web/translation /src/internal/web/translation
 RUN npm run build
